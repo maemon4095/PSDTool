@@ -253,6 +253,7 @@ export class Main {
     private flipY: HTMLInputElement;
     private fixedSide: HTMLSelectElement;
     private maxPixels: HTMLInputElement;
+    private maxPixelCount: number;
     private seqDlPrefix: HTMLInputElement;
     private seqDlNum: HTMLInputElement;
     private seqDl: HTMLButtonElement;
@@ -1428,17 +1429,40 @@ export class Main {
             this.fixedSide.addEventListener('change', e => this.redraw(), false);
         }
 
-        let lastPx: string;
         this.maxPixels = Main.getInputElement('#max-pixels');
-        this.maxPixels.addEventListener('blur', e => {
-            const v = Main.normalizeNumber(this.maxPixels.value);
-            if (v === lastPx) {
+        this.maxPixelCount = parseInt(this.maxPixels.value);
+        const resize = (size: number) => {
+            size = Math.floor(size);
+            if (size <= 0) {
                 return;
             }
-            lastPx = v;
-            this.maxPixels.value = v;
+            if (size === this.maxPixelCount) {
+                return;
+            }
+            this.maxPixelCount = size;
+            this.maxPixels.value = size.toString();
             this.redraw();
+        };
+        this.maxPixels.addEventListener('blur', () => {
+            const value = this.maxPixels.value;
+            const size = parseInt(value);
+            if (Number.isSafeInteger(size) && size > 0) {
+                this.maxPixels.setCustomValidity("");
+                resize(size);
+            } else {
+                this.maxPixels.setCustomValidity("invalid");
+            }
         }, false);
+
+        const previewContainer = getElementById(document, 'preview-container')!;
+        previewContainer.addEventListener("wheel", e => {
+            if (!e.ctrlKey) return;
+            e.preventDefault();
+            const sign = Math.sign(e.deltaY);
+            const delta = this.maxPixelCount * 0.05;
+
+            resize(Math.max(this.maxPixelCount - delta * sign, 0));
+        });
 
         {
             this.seqDlPrefix = Main.getInputElement('#seq-dl-prefix');
@@ -1515,7 +1539,7 @@ export class Main {
         const autoTrim = this.optionAutoTrim.checked;
         const w = autoTrim ? this.renderer.Width : this.renderer.CanvasWidth;
         const h = autoTrim ? this.renderer.Height : this.renderer.CanvasHeight;
-        const px = parseInt(this.maxPixels.value, 10);
+        const px = this.maxPixelCount;
         let scale = 1;
         switch (this.fixedSide.value) {
             case 'w':
