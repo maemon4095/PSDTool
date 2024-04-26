@@ -37,11 +37,8 @@
   },
   "scripts": {
     "test": "karma start",
-    "start": "npm run build && superstatic ./dist --port 8080 --debug true",
-    "build": "npm run-script build_go && webpack --mode production",
-    "watch": "npm run-script build_go && webpack --mode development --watch",
-    "build_go": "npm run-script build_prelude && cd src/blend/ && go run blend.go && cd ../psd/ && go mod download && gopherjs build -m -o /PSDTool/dist/js/psd.min.js",
-    "build_prelude": "cp -r -f ./static/* ./dist/"
+    "start": "node build.js && superstatic ./dist --port 8080 --debug true",
+    "build": "node build.js"
   },
   "repository": {
     "type": "git",
