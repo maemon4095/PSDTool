@@ -41,7 +41,7 @@
     "build": "npm run-script build_go && webpack --mode production",
     "watch": "npm run-script build_go && webpack --mode development --watch",
     "build_go": "npm run-script build_prelude && cd src/blend/ && go run blend.go && cd ../psd/ && go mod download && gopherjs build -m -o /PSDTool/dist/js/psd.min.js",
-    "build_prelude": "cp -r ./static/* ./dist/"
+    "build_prelude": "cp -r -f ./static/* ./dist/"
   },
   "repository": {
     "type": "git",
