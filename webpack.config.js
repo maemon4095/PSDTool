@@ -1,7 +1,7 @@
 module.exports = {
     entry: './src/main.ts',
     output: {
-        path: __dirname,
+        path: __dirname + "/dist",
         filename: './js/index.js',
     },
     resolve: {

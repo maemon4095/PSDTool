@@ -1,0 +1,23 @@
+{
+    "name": "${localWorkspaceFolderBasename}",
+    "build": {
+        "dockerfile": "./Dockerfile"
+    },
+    "runArgs": [
+        "--tty",
+        "--name",
+        "${localWorkspaceFolderBasename}"
+    ],
+    "mounts": [
+        {
+            "type": "volume",
+            "source": "${localWorkspaceFolderBasename}_tmp",
+            "target": "/${localWorkspaceFolderBasename}/node_modules"
+        }
+    ],
+    "workspaceMount": "source=${localWorkspaceFolder},target=/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+    "workspaceFolder": "/${localWorkspaceFolderBasename}",
+    "forwardPorts": [
+        8080
+    ]
+}

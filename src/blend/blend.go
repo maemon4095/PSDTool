@@ -488,7 +488,7 @@ export function blend(
     if (blendMode in implementedBlendModes) {
         dest.save();
         dest.globalAlpha = alpha;
-        dest.globalCompositeOperation = blendMode;
+        dest.globalCompositeOperation = blendMode as unknown as GlobalCompositeOperation;
         dest.drawImage(src.canvas, sx, sy, w, h, dx, dy, w, h);
         dest.restore();
         // console.log('native: '+blendMode);
@@ -539,7 +539,7 @@ function enumImplementedBlendModes(): { [b: string]: undefined } {
         throw new Error('cannot get CanvasRenderingContext2D');
     }
     for (const bm of Object.keys(blendModes)) {
-        ctx.globalCompositeOperation = bm;
+        ctx.globalCompositeOperation = bm as unknown as GlobalCompositeOperation;
         if (ctx.globalCompositeOperation === bm) {
             r[bm] = undefined;
         }
@@ -581,7 +581,7 @@ detectBrokenColorDodge().then(isBroken => {
 `
 
 func main() {
-	f, err := os.Create("blend.ts")
+	f, err := os.Create("blend.gen.ts")
 	if err != nil {
 		log.Fatal(err)
 	}

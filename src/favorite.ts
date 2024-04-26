@@ -14,7 +14,7 @@ export interface Node {
         value: string;
     };
     state?: {
-        opened: boolean
+        opened: boolean;
     };
     children?: (Node | string)[];
     parent?: Node | string;
@@ -124,7 +124,7 @@ class JSONBuilder {
 
 function stringToArrayBuffer(s: string, complete: (ab: ArrayBuffer) => void): void {
     let fr = new FileReader();
-    fr.onload = e => complete(fr.result);
+    fr.onload = e => complete(fr.result as ArrayBuffer);
     fr.readAsArrayBuffer(new Blob([s]));
 }
 
@@ -325,7 +325,7 @@ export class Favorite {
         this.jst.edit(target);
     }
 
-    public update(id: string | undefined, n: { type?: string; data?: { value: string; } }): void {
+    public update(id: string | undefined, n: { type?: string; data?: { value: string; }; }): void {
         let target: Node;
         if (id) {
             target = this.jst.get_node(id);
@@ -491,12 +491,12 @@ export class Favorite {
         return ids;
     }
 
-    private changedTimer = 0;
+    private changedTimer: number = 0;
     private jstChanged(): void {
         if (this.changedTimer) {
             clearTimeout(this.changedTimer);
         }
-        this.changedTimer = setTimeout(() => {
+        this.changedTimer = window.setTimeout(() => {
             this.changedTimer = 0;
             if (this.onModified) {
                 this.onModified();
@@ -527,7 +527,7 @@ export class Favorite {
         }
     }
 
-    private jstCopyNode(e: Event, data: { node: Node, original: Node }): void {
+    private jstCopyNode(data: { node: Node, original: Node; }): void {
         let process = (node: Node, original: Node): void => {
             const text = this.suggestUniqueName(node);
             if (node.text !== text) {
@@ -553,28 +553,28 @@ export class Favorite {
         process(data.node, data.original);
     }
 
-    private jstMoveNode(e: Event, data: { node: Node, text: string }): void {
+    private jstMoveNode(data: { node: Node, text: string; }): void {
         const text = this.suggestUniqueName(data.node, data.text);
         if (data.text !== text) {
             this.jst.rename_node(data.node, text);
         }
     }
 
-    private jstCreateNode(e: Event, data: { node: Node, text: string }): void {
+    private jstCreateNode(data: { node: Node, text: string; }): void {
         const text = this.suggestUniqueName(data.node);
         if (data.node.text !== text) {
             this.jst.rename_node(data.node, text);
         }
     }
 
-    private jstRenameNode(e: Event, data: { node: Node, text: string }): void {
+    private jstRenameNode(data: { node: Node, text: string; }): void {
         const text = this.suggestUniqueName(data.node, data.text);
         if (data.text !== text) {
             this.jst.rename_node(data.node, text);
         }
     }
 
-    private jstDoubleClick(e: Event): void {
+    private jstDoubleClick(e: JQuery.TriggeredEvent): void {
         const selected = this.jst.get_node(e.target);
         switch (selected.type) {
             case 'item':
@@ -656,10 +656,10 @@ export class Favorite {
             'cut.jstree',
             'paste.jstree'
         ].join(' '), e => this.jstChanged());
-        this.jq.on('copy_node.jstree', (e, data) => this.jstCopyNode(e, data));
-        this.jq.on('move_node.jstree', (e, data) => this.jstMoveNode(e, data));
-        this.jq.on('create_node.jstree', (e, data) => this.jstCreateNode(e, data));
-        this.jq.on('rename_node.jstree', (e, data) => this.jstRenameNode(e, data));
+        this.jq.on('copy_node.jstree', (e, data) => this.jstCopyNode(data));
+        this.jq.on('move_node.jstree', (e, data) => this.jstMoveNode(data));
+        this.jq.on('create_node.jstree', (e, data) => this.jstCreateNode(data));
+        this.jq.on('rename_node.jstree', (e, data) => this.jstRenameNode(data));
         this.jq.on('dblclick.jstree', (e) => this.jstDoubleClick(e));
         this.jq.on('ready.jstree', (e) => {
             if (loaded) {
@@ -745,14 +745,14 @@ export class Favorite {
         return true;
     }
 
-    private stringToNodeTree(s: string): { root: Node[], faviewMode: FaviewMode } {
+    private stringToNodeTree(s: string): { root: Node[], faviewMode: FaviewMode; } {
         const lines = s.replace(/\r/g, '').split('\n');
         if (lines.shift() !== '[PSDToolFavorites-v1]') {
             throw new Error('given PFV file does not have a valid header');
         }
 
         const jb = new JSONBuilder(this.defaultRootName);
-        const setting: { [name: string]: string } = {
+        const setting: { [name: string]: string; } = {
             'root-name': this.defaultRootName,
             'faview-mode': FaviewMode.ShowFaviewAndReadme.toString(),
         };
@@ -860,7 +860,7 @@ export class FaviewSelect {
         return this.select.value;
     }
     valueByIndex(index: number): string {
-        return this.select.options.item(index).value;
+        return this.select.options.item(index)!.value;
     }
 
     constructor(
@@ -906,7 +906,7 @@ export class Faview {
                     }
                     const items: FaviewSelectItem[] = [];
                     for (let k = 0; k < sel.length; ++k) {
-                        const opt = sel.options.item(k);
+                        const opt = sel.options.item(k)!;
                         items.push({
                             name: opt.textContent || '',
                             value: opt.value
@@ -916,7 +916,7 @@ export class Faview {
                 }
             }
 
-            const opt = this.rootSel.options.item(i);
+            const opt = this.rootSel.options.item(i)!;
             r.push({
                 name: opt.textContent || '',
                 value: opt.value,
@@ -1243,7 +1243,7 @@ export class Faview {
 
     public getActive(): Node[] {
         let selects = this.treeRoots[this.rootSel.selectedIndex].getElementsByTagName('select');
-        let items: { n: Node, lastMod: number }[] = [];
+        let items: { n: Node, lastMod: number; }[] = [];
         for (let i = 0; i < selects.length; ++i) {
             items.push({
                 n: this.favorite.get(selects[i].value),

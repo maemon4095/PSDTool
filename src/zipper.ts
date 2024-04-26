@@ -54,7 +54,7 @@ export class Zipper {
         const req = os.openCursor(IDBKeyRange.bound('meta_', 'meta`', false, true));
         const d = new Date().getTime() - 60 * 1000;
         req.onsuccess = e => {
-            let cursor: IDBCursorWithValue = req.result;
+            let cursor: IDBCursorWithValue = req.result!;
             if (!cursor) {
                 return;
             }

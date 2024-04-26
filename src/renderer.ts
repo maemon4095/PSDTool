@@ -1,4 +1,4 @@
-import * as blend from './blend/blend';
+import * as blend from './blend/blend.gen';
 import * as downscaler from './downscaler';
 
 export const enum FlipType {
@@ -184,7 +184,7 @@ export class Renderer {
             case 'destination-atop':
             case 'xor':
                 dest.globalAlpha = opacity;
-                dest.globalCompositeOperation = blendMode;
+                dest.globalCompositeOperation = blendMode as GlobalCompositeOperation;
                 dest.drawImage(src, x, y);
                 return;
         }
@@ -209,7 +209,7 @@ export class Renderer {
 
     private canvas: HTMLCanvasElement = document.createElement('canvas');
     public root = new Node(undefined);
-    public nodes: { [seqId: number]: Node } = {};
+    public nodes: { [seqId: number]: Node; } = {};
     constructor(private psd: psd.Root) {
         this.buildTree(this.root, psd);
         this.root.buffer = document.createElement('canvas');

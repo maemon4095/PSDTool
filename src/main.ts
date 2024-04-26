@@ -1,4 +1,8 @@
 import { polyfill } from 'es6-promise';
+import "split-pane";
+import type { MousetrapStatic } from "mousetrap";
+var Mousetrap = require('mousetrap-pause')(require('mousetrap')) as MousetrapStatic;
+import { saveAs } from 'file-saver';
 polyfill();
 
 import * as renderer from './renderer';
@@ -240,7 +244,7 @@ export class Main {
     private optionSafeMode: HTMLInputElement;
 
     private sideBody: HTMLElement;
-    private sideBodyScrollPos: { [name: string]: { left: number; top: number } } = {};
+    private sideBodyScrollPos: { [name: string]: { left: number; top: number; }; } = {};
 
     private previewCanvas: HTMLCanvasElement;
     private previewBackground: HTMLElement;
@@ -359,8 +363,8 @@ export class Main {
         const prog = new ProgressDialog('Loading...', 'Getting ready...');
         Main.loadAsBlob(p => prog.update(p, 'Receiving file...'), input)
             .then(
-            (o: { buffer: ArrayBuffer | Blob, name: string; }) =>
-                this.parse(p => prog.update(p, 'Loading file...'), o))
+                (o: { buffer: ArrayBuffer | Blob, name: string; }) =>
+                    this.parse(p => prog.update(p, 'Loading file...'), o))
             .then(() => {
                 prog.close();
                 fileOpenUi.style.display = 'none';
@@ -379,7 +383,7 @@ export class Main {
             });
     }
 
-    private parse(progress: (progress: number) => void, obj: { buffer: ArrayBuffer | Blob, name: string }): Promise<void> {
+    private parse(progress: (progress: number) => void, obj: { buffer: ArrayBuffer | Blob, name: string; }): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             PSD.parseWorker(
                 obj.buffer,
@@ -413,7 +417,7 @@ export class Main {
                         if (this.droppedPFV) {
                             const fr = new FileReader();
                             fr.onload = () => {
-                                this.favorite.loadFromArrayBuffer(fr.result);
+                                this.favorite.loadFromArrayBuffer(fr.result as ArrayBuffer);
                             };
                             fr.readAsArrayBuffer(this.droppedPFV);
                         } else {
@@ -444,7 +448,7 @@ export class Main {
                 // TODO: error handling
                 const fr = new FileReader();
                 fr.onload = e => {
-                    if (this.favorite.loadFromArrayBuffer(fr.result)) {
+                    if (this.favorite.loadFromArrayBuffer(fr.result as ArrayBuffer)) {
                         jQuery('#import-dialog').modal('hide');
                     }
                 };
@@ -925,7 +929,7 @@ export class Main {
     private exportZIP(filterSolo: boolean): void {
         const parents: favorite.Node[] = [];
         const path: string[] = [],
-            files: { name: string; value: string; filter?: string }[] = [];
+            files: { name: string; value: string; filter?: string; }[] = [];
         let r = (children: (favorite.Node | string)[]) => {
             for (let item of children) {
                 if (typeof item === 'string') {
@@ -1066,7 +1070,7 @@ export class Main {
         z.init(() => {
             this.enumerateFaview(
                 (
-                    path: { caption: string, name: string }[],
+                    path: { caption: string, name: string; }[],
                     image: HTMLCanvasElement,
                     index: number, total: number,
                     next: () => void
@@ -1147,7 +1151,7 @@ export class Main {
         z.init(() => {
             this.enumerateFaview(
                 (
-                    path: { caption: string, name: string, index: number }[],
+                    path: { caption: string, name: string, index: number; }[],
                     image: HTMLCanvasElement,
                     index: number, total: number,
                     next: () => void
@@ -1250,7 +1254,7 @@ export class Main {
 
     private enumerateFaview(
         item: (
-            path: { caption: string, name: string; index: number }[],
+            path: { caption: string, name: string; index: number; }[],
             image: HTMLCanvasElement,
             index: number, total: number,
             next: () => void
@@ -1277,7 +1281,7 @@ export class Main {
         const backup = this.layerRoot.serialize(true);
         let added = 0;
         let sels: favorite.FaviewSelect[];
-        const path: { caption: string, name: string; index: number }[] = [];
+        const path: { caption: string, name: string; index: number; }[] = [];
         let nextItemSet = (depth: number, index: number, complete: () => void): void => {
             const sel = sels[depth];
             const selItem = sel.items[index];
@@ -1390,9 +1394,9 @@ export class Main {
                 s = s.substring(0, p) + ';filename=' + encodeURIComponent(name) + s.substring(p);
             }
             try {
-                e.dataTransfer.setData('text', s);
-                e.dataTransfer.setData('text/uri-list', s);
-                e.dataTransfer.setData('text/plain', s);
+                e.dataTransfer!.setData('text', s);
+                e.dataTransfer!.setData('text/uri-list', s);
+                e.dataTransfer!.setData('text/plain', s);
             } catch (e) { /* ignore errors */ }
         }, false);
 
@@ -1703,8 +1707,8 @@ export class Main {
         }, false);
         dz.addEventListener('drop', e => {
             dz.classList.remove('psdtool-drop-active');
-            if (e.dataTransfer.files.length > 0) {
-                loader(e.dataTransfer.files);
+            if (e.dataTransfer!.files.length > 0) {
+                loader(e.dataTransfer!.files);
             }
             e.preventDefault();
             e.stopPropagation();
@@ -1724,22 +1728,14 @@ export class Main {
 
     private static canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
         return new Promise((resolve, reject) => {
-            if (HTMLCanvasElement.prototype.toBlob) {
-                canvas.toBlob(blob => {
-                    if (blob) {
-                        resolve(blob);
-                        return;
-                    }
-                    reject('could not get Blob');
-                });
-                return;
-            }
-            const bin = atob(canvas.toDataURL().split(',')[1]);
-            const buf = new Uint8Array(bin.length);
-            for (let i = 0, len = bin.length; i < len; ++i) {
-                buf[i] = bin.charCodeAt(i);
-            }
-            resolve(new Blob([buf], { type: 'image/png' }));
+            canvas.toBlob(blob => {
+                if (blob) {
+                    resolve(blob);
+                    return;
+                }
+                reject('could not get Blob');
+            });
+            return;
         });
     }
 
@@ -1749,14 +1745,14 @@ export class Main {
         });
     }
 
-    private static loadAsBlobCrossDomain(progress: (progress: number) => void, url: string): Promise<{ buffer: ArrayBuffer | Blob, name: string }> {
-        return new Promise<{ buffer: ArrayBuffer, name: string }>((resolve, reject) => {
+    private static loadAsBlobCrossDomain(progress: (progress: number) => void, url: string): Promise<{ buffer: ArrayBuffer | Blob, name: string; }> {
+        return new Promise<{ buffer: ArrayBuffer, name: string; }>((resolve, reject) => {
             if (location.protocol === 'https:' && url.substring(0, 5) === 'http:') {
                 return reject(new Error('cannot access to the insecure content from HTTPS.'));
             }
             const ifr = document.createElement('iframe');
             let port: MessagePort | undefined;
-            let timer = setTimeout(() => {
+            let timer = window.setTimeout(() => {
                 if (port) {
                     port.onmessage = undefined as any;
                 }
@@ -1813,11 +1809,11 @@ export class Main {
         });
     }
 
-    private static loadAsBlobFromString(progress: (progress: number) => void, url: string): Promise<{ buffer: ArrayBuffer | Blob, name: string }> {
+    private static loadAsBlobFromString(progress: (progress: number) => void, url: string): Promise<{ buffer: ArrayBuffer | Blob, name: string; }> {
         if (url.substring(0, 3) === 'xd:') {
             return this.loadAsBlobCrossDomain(progress, url.substring(3));
         }
-        return new Promise<{ buffer: ArrayBuffer, name: string }>((resolve, reject) => {
+        return new Promise<{ buffer: ArrayBuffer, name: string; }>((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open('GET', url);
             xhr.responseType = 'blob';
@@ -1841,11 +1837,11 @@ export class Main {
         });
     }
 
-    private static loadAsBlob(progress: (progress: number) => void, file_or_url: File | string): Promise<{ buffer: ArrayBuffer | Blob, name: string }> {
+    private static loadAsBlob(progress: (progress: number) => void, file_or_url: File | string): Promise<{ buffer: ArrayBuffer | Blob, name: string; }> {
         if (!(file_or_url instanceof File)) {
             return this.loadAsBlobFromString(progress, file_or_url);
         }
-        return new Promise<{ buffer: ArrayBuffer | Blob, name: string }>(resolve => {
+        return new Promise<{ buffer: ArrayBuffer | Blob, name: string; }>(resolve => {
             resolve({
                 buffer: file_or_url,
                 name: file_or_url.name.replace(/\..*$/i, '') + '_'
@@ -1864,7 +1860,7 @@ export class Main {
         }
         return originalStopCallback.call(this, e, element, combo);
     };
-    Mousetrap.init();
+    // Mousetrap.init();
 })();
 const main = new Main();
 document.addEventListener('DOMContentLoaded', e => main.init(), false);
