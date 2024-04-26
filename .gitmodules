@@ -1,0 +1,3 @@
+[submodule "downscaler"]
+	path = downscaler
+	url = https://github.com/maemon4095/PSDTool.downscaler-ts.git
